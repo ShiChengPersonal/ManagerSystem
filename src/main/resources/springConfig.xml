@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!-- 开启注解扫描，不需要包括controller -->
+    <context:component-scan base-package="com.ssm.manager">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+
+    <!--以下内容本是mybatis配置文件的内容，与spring整合之后，转移到spring配置文件-->
+    <!--配置连接池-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/manager?useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT"/>
+        <property name="user" value="root"/>
+        <property name="password" value="admin"/>
+    </bean>
+    <!--配置SqlSessionFactory工厂-->
+    <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!--配置mybatis配置文件所在位置-->
+        <property name="configLocation" value="classpath:mybatis.xml"/>
+    </bean>
+    <!--配置dao接口所在包-->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.ssm.manager.dao"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactoryBean"/>
+    </bean>
+
+
+    <!--配置事务-->
+    <!--配置声明式事务管理器-->
+    <bean id="dataSourceTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--绑定连接池-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    <!--配置事务通知-->
+    <tx:advice id="txAdvice" transaction-manager="dataSourceTransactionManager">
+        <tx:attributes>
+            <!--这两种name属性配置方式中，范围小的优先级高
+                按照开发标准，find开头的都是查询方法，find*先匹配了查询方法，所以*配置只匹配增删改方法
+            -->
+            <tx:method name="find*" propagation="REQUIRED" read-only="false"/>
+            <tx:method name="*" propagation="SUPPORTS" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置aop切入点表达式-->
+    <aop:config>
+        <aop:pointcut id="userService" expression="execution(* com.ssm.manager.services.impl.UserServiceImpl.*(..))"/>
+    </aop:config>
+
+    <!--建立事务通知和切入点的对应关系-->
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="userService"/>
+    </aop:config>
+
+
+    <!--配置aop-->
+    <!--开启注解aop的支持，当使用注解配置aop时需要-->
+    <aop:aspectj-autoproxy/>
+    <!--配置通知类-->
+    <bean id="userAop" class="com.ssm.manager.springAOP.UserAop"/>
+    <!--配置切面-->
+    <aop:config>
+        <!--联系通知类-->
+        <aop:aspect id="aspectUser" ref="userAop">
+            <!--由于已经联系了通知类，因此方法只需要通知类中的方法名-->
+            <aop:before method="before" pointcut-ref="userService"/>
+            <aop:after-returning method="afterReturning" pointcut-ref="userService"/>
+            <aop:after-throwing method="afterThrowing" pointcut-ref="userService"/>
+            <aop:after method="after" pointcut-ref="userService"/>
+            <!--<aop:around method="around" pointcut-ref="userService"/>-->
+        </aop:aspect>
+    </aop:config>
+</beans>

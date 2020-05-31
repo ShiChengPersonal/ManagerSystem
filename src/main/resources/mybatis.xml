@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--配置默认数据库环境，此时在spring配置文件中配置完成-->
+
+    <!--如果使用xml，使用resource属性为dao配置文件路径，每个mapper和dao接口的文件结构路径必须一致
+        如果使用注解方式，那么应使用class属性对被注解的Dao全限定类名进行配置
+                        或者使用package，说明该包下所有dao都被扫描-->
+    <mappers>
+        <mapper resource="com/ssm/manager/dao/IUserDao.xml"/>
+    </mappers>
+</configuration>

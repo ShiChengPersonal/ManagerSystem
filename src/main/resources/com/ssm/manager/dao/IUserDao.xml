@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--命名空间为映射类的全限定类名-->
+<mapper namespace="com.ssm.manager.dao.IUserDao">
+
+    <!--配置sql语句，其中id必须为dao接口的方法名，指定的返回结果实体类必须是全限定类名-->
+    <!--查询单个用户-->
+    <select id="findOne" resultType="com.ssm.manager.domain.User" parameterType="com.ssm.manager.domain.User">
+        select u_id,u_name,u_gender,u_address,u_phone,u_money,u_caption,u_remarks,u_createtime,u_updatetime
+        from m_user
+        <where>
+            <if test="u_id != null and '' != u_id ">
+              and u_id = #{u_id}
+            </if>
+            <if test="u_name != null and '' != u_name ">
+              and u_name = #{u_name}
+            </if>
+            <if test="u_address != null and '' != u_address ">
+              and u_address = #{u_address}
+            </if>
+            <if test="u_phone != null and '' != u_phone ">
+              and u_phone = #{u_phone}
+            </if>
+        </where>
+    </select>
+
+    <!--添加单个用户，并返回插入用户的u_id-->
+    <insert id="addUser"  parameterType="com.ssm.manager.domain.User" useGeneratedKeys="true" keyProperty="u_id">
+        insert into m_user(
+          u_name,u_gender,u_address,u_phone,u_money,u_caption,u_remarks
+        )
+        values(#{u_name},#{u_gender},#{u_address},#{u_phone},#{u_money},#{u_caption},#{u_remarks})
+
+    </insert>
+
+
+</mapper>
